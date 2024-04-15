@@ -11,13 +11,13 @@ import (
 	"github.com/ilya-burinskiy/gophkeeper/internal/configs"
 )
 
-func HashPassword(password string) (string, error) {
+func HashPassword(password string) ([]byte, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate hash from password: %w", err)
+		return nil, fmt.Errorf("failed to generate hash from password: %w", err)
 	}
 
-	return string(bytes), nil
+	return bytes, nil
 }
 
 func ValidatePasswordHash(password, hash string) bool {
