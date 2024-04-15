@@ -25,6 +25,13 @@ func (srv *registerService) Register(ctx context.Context, login, password string
 	return args.String(0), args.Error(1)
 }
 
+type authenticateService struct{ mock.Mock }
+
+func (srv *authenticateService) Authenticate(ctx context.Context, login, password string) (string, error) {
+	args := srv.Called(ctx, login, password)
+	return args.String(0), args.Error(1)
+}
+
 func TestRegister(t *testing.T) {
 	type want struct {
 		code     int
@@ -72,7 +79,7 @@ func TestRegister(t *testing.T) {
 				err: errors.New("error"),
 			},
 			want: want{
-				code: http.StatusInternalServerError,
+				code:     http.StatusInternalServerError,
 				response: string(toJSON(t, "error")) + "\n",
 			},
 		},
@@ -93,6 +100,73 @@ func TestRegister(t *testing.T) {
 			request, err := http.NewRequest(
 				http.MethodPost,
 				"/api/user/register",
+				bytes.NewReader(tc.requestBody),
+			)
+			require.NoError(t, err)
+			handler.ServeHTTP(recorder, request)
+			assert.Equal(t, tc.want.code, recorder.Result().StatusCode)
+			assert.Equal(t, tc.want.response, recorder.Body.String())
+		})
+	}
+}
+
+func TestAuthenticate(t *testing.T) {
+	type want struct {
+		code     int
+		response string
+	}
+	type authenticateResult struct {
+		jwtStr string
+		err    error
+	}
+	testCases := []struct {
+		name        string
+		requestBody []byte
+		authRes     authenticateResult
+		want        want
+	}{
+		{
+			name:        "responses with ok status",
+			requestBody: toJSON(t, map[string]string{"login": "login", "password": "password"}),
+			authRes:     authenticateResult{jwtStr: "123"},
+			want:        want{code: http.StatusOK},
+		},
+		{
+			name:        "responses with bad request status if request body is invalid",
+			requestBody: toJSON(t, "login: login, password: password"),
+			want: want{
+				code:     http.StatusBadRequest,
+				response: string(toJSON(t, "invalid request body")) + "\n",
+			},
+		},
+		{
+			name:        "responses with status unauthorized",
+			requestBody: toJSON(t, map[string]string{"login": "login", "password": "password"}),
+			authRes: authenticateResult{
+				err: errors.New("error"),
+			},
+			want: want{
+				code:     http.StatusUnauthorized,
+				response: string(toJSON(t, "error")) + "\n",
+			},
+		},
+	}
+
+	authService := new(authenticateService)
+	handler := http.HandlerFunc(
+		handlers.NewUserHandlers(zaptest.NewLogger(t)).
+			Authenticate(authService),
+	)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			authCall := authService.On("Authenticate", mock.Anything, mock.Anything, mock.Anything).
+				Return(tc.authRes.jwtStr, tc.authRes.err)
+			defer authCall.Unset()
+
+			recorder := httptest.NewRecorder()
+			request, err := http.NewRequest(
+				http.MethodPost,
+				"/api/user/auth",
 				bytes.NewReader(tc.requestBody),
 			)
 			require.NoError(t, err)

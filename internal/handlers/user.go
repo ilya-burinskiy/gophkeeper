@@ -15,6 +15,10 @@ type RegisterService interface {
 	Register(ctx context.Context, login, password string) (string, error)
 }
 
+type AuthenticateService interface {
+	Authenticate(ctx context.Context, login, password string) (string, error)
+}
+
 type UserHandler struct {
 	logger *zap.Logger
 }
@@ -58,6 +62,39 @@ func (h UserHandler) Register(regSrv RegisterService) func(http.ResponseWriter, 
 			}
 			return
 		}
+		auth.SetJWTCookie(w, jwtStr)
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func (h UserHandler) Authenticate(authService AuthenticateService) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		type payload struct {
+			Login    string `json:"login"`
+			Password string `json:"password"`
+		}
+		var requestBody payload
+		decoder := json.NewDecoder(r.Body)
+		encoder := json.NewEncoder(w)
+		err := decoder.Decode(&requestBody)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			if err := encoder.Encode("invalid request body"); err != nil {
+				h.logger.Info("failed to encode response", zap.Error(err))
+			}
+			return
+		}
+		jwtStr, err := authService.Authenticate(r.Context(), requestBody.Login, requestBody.Password)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			if err := encoder.Encode(err.Error()); err != nil {
+				h.logger.Info("failed to encode response", zap.Error(err))
+			}
+			return
+		}
+
 		auth.SetJWTCookie(w, jwtStr)
 		w.WriteHeader(http.StatusOK)
 	}
