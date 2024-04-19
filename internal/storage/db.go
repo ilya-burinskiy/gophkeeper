@@ -58,6 +58,42 @@ func (db *DBStorage) CreateUser(ctx context.Context, login string, encryptedPass
 	return user, nil
 }
 
+func (db *DBStorage) CreateSecret(
+	ctx context.Context,
+	userID int,
+	secretType models.SecretType,
+	description string,
+	encryptedData []byte,
+	encryptedKey []byte) (models.Secret, error) {
+
+	row := db.pool.QueryRow(
+		ctx,
+		`INSERT INTO "secrets" ("user_id", "type", "description", "encrypted_data", "encrypted_key")
+		 VALUES (@userID, @secretType, @description, @encryptedData, @encryptedKey) RETURNING "id"`,
+		pgx.NamedArgs{
+			"userID":        userID,
+			"secretType":    secretType,
+			"description":   description,
+			"encryptedData": encryptedData,
+			"encryptedKey":  encryptedKey,
+		},
+	)
+	var secretID int
+	secret := models.Secret{
+		UserID:        userID,
+		SecretType:    secretType,
+		Description:   description,
+		EncryptedData: encryptedData,
+		EncryptedKey:  encryptedKey,
+	}
+	if err := row.Scan(&secretID); err != nil {
+		return secret, fmt.Errorf("failed to create secret: %w", err)
+	}
+	secret.ID = secretID
+
+	return secret, nil
+}
+
 //go:embed db/migrations/*.sql
 var migrationsDir embed.FS
 
