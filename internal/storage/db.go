@@ -58,6 +58,31 @@ func (db *DBStorage) CreateUser(ctx context.Context, login string, encryptedPass
 	return user, nil
 }
 
+func (db *DBStorage) FindUserByLogin(ctx context.Context, login string) (models.User, error) {
+	row := db.pool.QueryRow(
+		ctx,
+		`SELECT "id", "encrypted_password"
+		 FROM "users"
+		 WHERE "login" = @login`,
+		pgx.NamedArgs{"login": login},
+	)
+	user := models.User{Login: login}
+	var id int
+	var encryptedPassword []byte
+	err := row.Scan(&id, &encryptedPassword)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return user, ErrUserNotFound{User: user}
+		}
+		return user, fmt.Errorf("failed to find user: %w", err)
+	}
+
+	user.ID = id
+	user.EncryptedPassword = encryptedPassword
+
+	return user, nil
+}
+
 func (db *DBStorage) CreateSecret(
 	ctx context.Context,
 	userID int,
