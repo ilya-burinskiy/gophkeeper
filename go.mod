@@ -3,6 +3,7 @@ module github.com/ilya-burinskiy/gophkeeper
 go 1.20
 
 require (
+	github.com/go-chi/chi/v5 v5.0.12
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
