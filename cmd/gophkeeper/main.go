@@ -30,8 +30,16 @@ func main() {
 	authSrv := services.NewAuthenticateService(store)
 	encryptor := services.NewDataEncryptor(services.CryptoRandGen{})
 	createSecretSrv := services.NewCreateSecretService(store, encryptor)
+	findSrv := services.NewFindSecretService(store)
+	updateSrv := services.NewUpdateSecretService(store, encryptor)
 	configureUserRouter(logger, registerSrv, authSrv, router)
-	configureSecretRouter(logger, createSecretSrv, router)
+	configureSecretRouter(
+		logger,
+		createSecretSrv,
+		findSrv,
+		updateSrv,
+		router,
+	)
 
 	server := http.Server{
 		Handler: router,
@@ -59,12 +67,15 @@ func configureUserRouter(
 func configureSecretRouter(
 	logger *zap.Logger,
 	createSrv services.CreateSecretService,
+	findSrv services.FindSecretService,
+	updateSrv services.UpdateSecretService,
 	mainRouter chi.Router) {
 
 	handler := handlers.NewSecretHandler(logger)
 	mainRouter.Group(func(router chi.Router) {
 		router.Use(middlewares.Authenticate)
 		router.Post("/api/secrets", handler.Create(createSrv))
+		router.Patch("/api/secrets/{id}", handler.Update(findSrv, updateSrv))
 	})
 }
 
