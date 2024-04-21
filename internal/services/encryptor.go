@@ -53,6 +53,14 @@ func (de DataEncryptor) Encrypt(msg []byte) ([]byte, []byte, error) {
 	return encodedMsg, encodedKey, nil
 }
 
+func (de DataEncryptor) ReEncrypt(msg []byte, encryptedKey []byte) ([]byte, error) {
+	key, err := de.decrypt(encryptedKey, masterKey[:])
+	if err != nil {
+		return nil, err
+	}
+	return de.encrypt(msg, key)
+}
+
 func (de DataEncryptor) Decrypt(ciphertext []byte, encryptedKey []byte) ([]byte, error) {
 	decryptedKey, err := de.decrypt(encryptedKey, masterKey[:])
 	if err != nil {
