@@ -145,6 +145,24 @@ func (db *DBStorage) FindSecretByID(ctx context.Context, id int) (models.Secret,
 	return secret, nil
 }
 
+func (db *DBStorage) UpdateSecret(
+	ctx context.Context,
+	secretID int,
+	description string,
+	newData []byte) error {
+
+	_, err := db.pool.Exec(
+		ctx,
+		`UPDATE "secrets" SET "encrypted_data" = $1, "description" = $2 WHERE "id" = $3`,
+		newData, description, secretID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update encypted data: %w", err)
+	}
+
+	return nil
+}
+
 //go:embed db/migrations/*.sql
 var migrationsDir embed.FS
 
