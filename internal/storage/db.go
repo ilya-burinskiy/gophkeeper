@@ -119,6 +119,32 @@ func (db *DBStorage) CreateSecret(
 	return secret, nil
 }
 
+func (db *DBStorage) FindSecretByID(ctx context.Context, id int) (models.Secret, error) {
+	row := db.pool.QueryRow(
+		ctx,
+		`SELECT "user_id", "type", "description", "encrypted_data", "encrypted_key"
+		 FROM "secrets"
+		 WHERE "id" = $1`,
+		id,
+	)
+	secret := models.Secret{ID: id}
+	err := row.Scan(
+		&secret.UserID,
+		&secret.SecretType,
+		&secret.Description,
+		&secret.EncryptedData,
+		&secret.EncryptedKey,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return secret, ErrSecretNotFound{Secret: secret}
+		}
+		return secret, fmt.Errorf("failed to find secret: %w", err)
+	}
+
+	return secret, nil
+}
+
 //go:embed db/migrations/*.sql
 var migrationsDir embed.FS
 
