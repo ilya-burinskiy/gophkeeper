@@ -163,6 +163,35 @@ func (db *DBStorage) UpdateSecret(
 	return nil
 }
 
+func (db *DBStorage) ListUserSecrets(ctx context.Context, userID int) ([]models.Secret, error) {
+	rows, err := db.pool.Query(
+		ctx,
+		`SELECT "id", "type", "description", "encrypted_data", "encrypted_key"
+		 FROM "secrets" WHERE "user_id" = $1`,
+		userID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch user secrets: %w", err)
+	}
+
+	result, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.Secret, error) {
+		var secret models.Secret
+		err := row.Scan(
+			&secret.ID,
+			&secret.SecretType,
+			&secret.Description,
+			&secret.EncryptedData,
+			&secret.EncryptedKey,
+		)
+		return secret, err
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch user secrets: %w", err)
+	}
+
+	return result, nil
+}
+
 //go:embed db/migrations/*.sql
 var migrationsDir embed.FS
 
