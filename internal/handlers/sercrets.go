@@ -186,7 +186,10 @@ func (h SecretHandler) handleCreateBinDataSecret(
 		userID,
 		description,
 		models.BinDataSecret,
-		&models.BinData{Bytes: fileContent.Bytes()},
+		&models.BinData{
+			Filename: header.Filename,
+			Bytes:    fileContent.Bytes(),
+		},
 	)
 	if err != nil {
 		h.logger.Info("failed to create binary data secret", zap.Error(err))
@@ -381,7 +384,8 @@ func (h SecretHandler) handleUpdateBinDataSecret(
 		newSecretType,
 		description,
 		&models.BinData{
-			Bytes: fileContent.Bytes(),
+			Filename: header.Filename,
+			Bytes:    fileContent.Bytes(),
 		},
 		secret.EncryptedKey,
 	)

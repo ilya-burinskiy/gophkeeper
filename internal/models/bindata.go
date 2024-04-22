@@ -1,14 +1,26 @@
 package models
 
+import (
+	"bytes"
+	"encoding/gob"
+)
+
 type BinData struct {
-	Bytes []byte
+	Filename string
+	Bytes    []byte
 }
 
 func (bin *BinData) Marshall() ([]byte, error) {
-	return bin.Bytes, nil
+	var buf bytes.Buffer
+	encoder := gob.NewEncoder(&buf)
+	err := encoder.Encode(bin)
+
+	return buf.Bytes(), err
 }
 
 func (bin *BinData) Unmarshall(bs []byte) error {
-	bin.Bytes = bs
-	return nil
+	buf := bytes.NewBuffer(bs)
+	decoder := gob.NewDecoder(buf)
+
+	return decoder.Decode(bin)
 }
