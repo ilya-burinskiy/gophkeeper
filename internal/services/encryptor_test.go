@@ -133,3 +133,57 @@ func TestDecrypt(t *testing.T) {
 		})
 	}
 }
+
+func TestReEncrypt(t *testing.T) {
+	type randGenResult struct {
+		res []byte
+		err error
+	}
+	type want struct {
+		encryptedMsg []byte
+		errMsg       string
+	}
+	testCases := []struct {
+		name         string
+		msg          []byte
+		encryptedKey []byte
+		randGenRes   randGenResult
+		want         want
+	}{
+		{
+			name: "reencrypts message",
+			msg:  []byte("new msg"),
+			encryptedKey: []byte{
+				48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 112, 199, 192, 232,
+				36, 33, 177, 56, 14, 234, 249, 185, 124, 170, 254, 36, 93, 200, 29,
+				74, 211, 111, 109, 123, 203, 28, 251, 175, 133, 94, 40, 132,
+			},
+			randGenRes: randGenResult{
+				res: []byte("abcdef0123456789"),
+			},
+			want: want{
+				encryptedMsg: []byte{
+					0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35,
+					0x39, 0x1c, 0x99, 0x5b, 0x74, 0x70, 0x41, 0xa9, 0x8d, 0xa2, 0xb3, 0x69,
+					0x70, 0xc5, 0x60, 0x40, 0xfb, 0x4f, 0x8, 0x32, 0x38, 0xe7, 0x16,
+				},
+			},
+		},
+	}
+
+	rndGen := new(randGenMock)
+	encryptor := services.NewDataEncryptor(rndGen)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rndGen.On("Gen", mock.Anything).
+				Return(tc.randGenRes.res, tc.randGenRes.err).
+				Once()
+			reEncryptedMsg, err := encryptor.ReEncrypt(tc.msg, tc.encryptedKey)
+			if err == nil {
+				assert.Equal(t, tc.want.encryptedMsg, reEncryptedMsg)
+			} else {
+				assert.EqualError(t, err, tc.want.errMsg)
+			}
+		})
+	}
+}
