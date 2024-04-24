@@ -42,6 +42,10 @@ type UpdateSecretService interface {
 		key []byte) error
 }
 
+type FetchUserSecretsService interface {
+	FetchUserSecrets(ctx context.Context, userID int) ([]byte, error)
+}
+
 type SecretHandler struct {
 	logger *zap.Logger
 }
@@ -403,4 +407,19 @@ func (h SecretHandler) handleUpdateBinDataSecret(
 	}
 
 	return http.StatusOK
+}
+
+func (h SecretHandler) GetUserSecrets(secretsFetcher FetchUserSecretsService) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/zip")
+		userID, _ := middlewares.UserIDFromContext(r.Context())
+		archiveContent, err := secretsFetcher.FetchUserSecrets(r.Context(), userID)
+		if err != nil {
+			h.logger.Info("failed to create secrets archive", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write(archiveContent)
+	}
 }
