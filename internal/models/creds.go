@@ -6,8 +6,9 @@ import (
 )
 
 type Credentials struct {
-	Login    string
-	Password string
+	Description string
+	Login       string
+	Password    string
 }
 
 func (creds *Credentials) Marshall() ([]byte, error) {

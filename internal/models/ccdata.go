@@ -7,10 +7,11 @@ import (
 )
 
 type CreditCard struct {
-	Number     string
-	Name       string
-	ExpiryDate time.Time
-	CVV2       string
+	Description string
+	Number      string
+	Name        string
+	ExpiryDate  time.Time
+	CVV2        string
 }
 
 func (cc *CreditCard) Marshall() ([]byte, error) {

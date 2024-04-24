@@ -98,6 +98,7 @@ func (srv FetchUserSecretsService) writeCredsSecrets(zipWriter *zip.Writer, cred
 		if err != nil {
 			return err
 		}
+		creds[i].Description = credsSecrets[i].Description
 	}
 
 	credsJSON, err := json.Marshal(creds)
@@ -136,6 +137,7 @@ func (srv FetchUserSecretsService) writeCreditCardsSecrets(
 		if err != nil {
 			return err
 		}
+		creditCards[i].Description = creditCardsSecrets[i].Description
 	}
 
 	creditCardsJSON, err := json.Marshal(creditCards)
