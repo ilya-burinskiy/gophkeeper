@@ -32,12 +32,15 @@ func main() {
 	createSecretSrv := services.NewCreateSecretService(store, encryptor)
 	findSrv := services.NewFindSecretService(store)
 	updateSrv := services.NewUpdateSecretService(store, encryptor)
+	fetchSrv := services.NewFetchUserSecretsService(store, encryptor)
+
 	configureUserRouter(logger, registerSrv, authSrv, router)
 	configureSecretRouter(
 		logger,
 		createSecretSrv,
 		findSrv,
 		updateSrv,
+		fetchSrv,
 		router,
 	)
 
@@ -69,6 +72,7 @@ func configureSecretRouter(
 	createSrv services.CreateSecretService,
 	findSrv services.FindSecretService,
 	updateSrv services.UpdateSecretService,
+	fetchSrv services.FetchUserSecretsService,
 	mainRouter chi.Router) {
 
 	handler := handlers.NewSecretHandler(logger)
@@ -76,6 +80,7 @@ func configureSecretRouter(
 		router.Use(middlewares.Authenticate)
 		router.Post("/api/secrets", handler.Create(createSrv))
 		router.Patch("/api/secrets/{id}", handler.Update(findSrv, updateSrv))
+		router.Get("/api/secrets", handler.GetUserSecrets(fetchSrv))
 	})
 }
 
