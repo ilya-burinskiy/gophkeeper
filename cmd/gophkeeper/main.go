@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -44,9 +45,17 @@ func main() {
 		router,
 	)
 
+	cert, err := tls.LoadX509KeyPair(config.ServerCRTPath, config.ServerKeyPath)
+	if err != nil {
+		panic(err)
+	}
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
 	server := http.Server{
-		Handler: router,
-		Addr:    config.RunAddr,
+		Handler:   router,
+		Addr:      config.RunAddr,
+		TLSConfig: tlsConfig,
 	}
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		panic(err)

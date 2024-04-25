@@ -21,3 +21,9 @@ vendor/
 # IDEs directories
 .idea
 .vscode
+
+ca.crt
+ca.key
+server.crt
+server.csr
+server.key
