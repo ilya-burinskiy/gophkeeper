@@ -46,6 +46,10 @@ type FetchUserSecretsService interface {
 	FetchUserSecrets(ctx context.Context, userID int) ([]byte, error)
 }
 
+type DeleteSecretService interface {
+	Delete(ctx context.Context, userID int, secret models.Secret) error
+}
+
 type SecretHandler struct {
 	logger *zap.Logger
 }
@@ -421,5 +425,40 @@ func (h SecretHandler) GetUserSecrets(secretsFetcher FetchUserSecretsService) fu
 		}
 		w.WriteHeader(http.StatusOK)
 		w.Write(archiveContent)
+	}
+}
+
+func (h SecretHandler) Delete(findSrv FindSecretService, deleteSrv DeleteSecretService) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, _ := middlewares.UserIDFromContext(r.Context())
+		secretID, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			h.logger.Info("invalid secret id", zap.Error(err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		secret, err := findSrv.Find(r.Context(), secretID)
+		if err != nil {
+			var notFoundErr storage.ErrSecretNotFound
+			if errors.As(err, &notFoundErr) {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			h.logger.Info("failed to delete secret", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		err = deleteSrv.Delete(r.Context(), userID, secret)
+		if err != nil {
+			var permErr services.ErrNoPermission
+			if errors.As(err, &permErr) {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			h.logger.Info("failed to delete secret", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	}
 }
