@@ -192,6 +192,19 @@ func (db *DBStorage) ListUserSecrets(ctx context.Context, userID int) ([]models.
 	return result, nil
 }
 
+func (db *DBStorage) DeleteSecret(ctx context.Context, secretID int) error {
+	_, err := db.pool.Exec(
+		ctx,
+		`DELETE FROM "secrets" WHERE "id" = $1`,
+		secretID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete secret with id=%d", secretID)
+	}
+
+	return nil
+}
+
 //go:embed db/migrations/*.sql
 var migrationsDir embed.FS
 
