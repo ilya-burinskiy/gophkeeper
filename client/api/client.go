@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -48,7 +49,7 @@ func (client *GophkeeperClient) RegisterUser(ctx context.Context, login, passwor
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to register user: %w", err)
+		return errors.New("failed to register user")
 	}
 
 	return nil
