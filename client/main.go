@@ -35,6 +35,22 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println("Success")
+	case "authenticate":
+		flagSet := flag.NewFlagSet("authenticate", flag.ExitOnError)
+		var login, password string
+		flagSet.StringVar(&login, "login", "", "your login")
+		flagSet.StringVar(&password, "password", "", "your password")
+		err := flagSet.Parse(args)
+		if err != nil {
+			log.Fatal("failed to parse authenticate flags", err)
+		}
+
+		authCmd := cli.NewAuthenticateCmd(client)
+		jwtStr, err := authCmd.Execute(login, password)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("jwt=", jwtStr)
 	default:
 		log.Fatal("invalid command")
 	}
