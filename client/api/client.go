@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 )
 
@@ -129,6 +130,58 @@ func (client *GophkeeperClient) GetSecrets(ctx context.Context) ([]byte, error) 
 	return archiveContent, nil
 }
 
+func (client *GophkeeperClient) CreateCredentials(ctx context.Context, login, password string) error {
+	reqBody := &bytes.Buffer{}
+	writer := multipart.NewWriter(reqBody)
+	if err := createFormField(writer, "secret_type", []byte("credentials")); err != nil {
+		return fmt.Errorf("failed to add secret_type field: %w", err)
+	}
+	if err := createFormField(writer, "login", []byte(login)); err != nil {
+		return fmt.Errorf("failed to add login field: %w", err)
+	}
+	if err := createFormField(writer, "password", []byte(password)); err != nil {
+		return fmt.Errorf("failed to add password filed: %w", err)
+	}
+	if err := writer.Close(); err != nil {
+		return fmt.Errorf("failed to create request form: %w", err)
+	}
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		client.baseURL+"/api/secrets",
+		reqBody,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Add("Content-Type", writer.FormDataContentType())
+	req.AddCookie(&http.Cookie{
+		Name:  "jwt",
+		Value: client.jwt,
+	})
+	resp, err := client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to do request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("failed to create creadentials")
+	}
+
+	return nil
+}
+
 func (client *GophkeeperClient) SetJWT(jwt string) {
 	client.jwt = jwt
+}
+
+func createFormField(writer *multipart.Writer, name string, value []byte) error {
+	fw, err := writer.CreateFormField(name)
+	if err != nil {
+		return err
+	}
+	_, err = fw.Write(value)
+
+	return err
 }
