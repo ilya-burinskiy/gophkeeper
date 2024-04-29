@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -94,4 +95,40 @@ func (client *GophkeeperClient) AuthenticateUser(ctx context.Context, login, pas
 	}
 
 	return "", errors.New("failed to get JWT from response")
+}
+
+func (client *GophkeeperClient) GetSecrets(ctx context.Context) ([]byte, error) {
+	req, err := http.NewRequest(
+		http.MethodGet,
+		client.baseURL+"/api/secrets",
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/zip")
+	req.AddCookie(&http.Cookie{
+		Name:  "jwt",
+		Value: client.jwt,
+	})
+
+	resp, err := client.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to do request")
+	}
+	defer resp.Body.Close()
+
+	archiveContent, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read archive content: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get secrets status=%d", resp.StatusCode)
+	}
+
+	return archiveContent, nil
+}
+
+func (client *GophkeeperClient) SetJWT(jwt string) {
+	client.jwt = jwt
 }
