@@ -51,6 +51,22 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println("jwt=", jwtStr)
+	case "get-secrets":
+		flagSet := flag.NewFlagSet("get-secrets", flag.ExitOnError)
+		var outputFname, jwt string
+		flagSet.StringVar(&outputFname, "output", "archive.zip", "output filename")
+		flagSet.StringVar(&jwt, "jwt", "", "authentication JWT")
+		err := flagSet.Parse(args)
+		if err != nil {
+			log.Fatal("failed to parse get-secrets flags", err)
+		}
+
+		getCmd := cli.NewGetSecretCmd(client)
+		err = getCmd.Execute(outputFname, jwt)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("Success")
 	default:
 		log.Fatal("invalid command")
 	}
