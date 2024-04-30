@@ -117,6 +117,25 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println("Success")
+	case "update-creds":
+		flagSet := flag.NewFlagSet("update-creds", flag.ExitOnError)
+		var id int64
+		var login, password, jwt string
+		flagSet.Int64Var(&id, "id", 0, "credentials ID")
+		flagSet.StringVar(&login, "login", "", "login")
+		flagSet.StringVar(&password, "password", "", "password")
+		flagSet.StringVar(&jwt, "jwt", "", "authentication JWT")
+		err := flagSet.Parse(args)
+		if err != nil {
+			log.Fatal("failed to parse update-creds flags", err)
+		}
+
+		updateCmd := cli.NewUpdateCredentialsCmd(client)
+		err = updateCmd.Execute(id, login, password, jwt)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("Success")
 	default:
 		log.Fatal("invalid command")
 	}
