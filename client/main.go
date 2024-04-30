@@ -33,6 +33,8 @@ func main() {
 		execCreateBinDataCmd(args, client)
 	case "update-creds":
 		execUpdateCredsCmd(args, client)
+	case "update-credit-card":
+		execUpdateCreditCardCmd(args, client)
 	default:
 		log.Fatal("invalid command")
 	}
@@ -163,6 +165,29 @@ func execUpdateCredsCmd(args []string, client *api.GophkeeperClient) {
 
 	updateCmd := cli.NewUpdateCredentialsCmd(client)
 	err = updateCmd.Execute(id, login, password, jwt)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Success")
+}
+
+func execUpdateCreditCardCmd(args []string, client *api.GophkeeperClient) {
+	flagSet := flag.NewFlagSet("update-credit-card", flag.ExitOnError)
+	var id int64
+	var number, name, expiryDate, cvv2, jwt string
+	flagSet.Int64Var(&id, "id", 0, "credit card ID")
+	flagSet.StringVar(&number, "number", "", "credit card number")
+	flagSet.StringVar(&name, "name", "", "credit card owner number")
+	flagSet.StringVar(&expiryDate, "date", "", "credit card expriry date in RFC3339 format")
+	flagSet.StringVar(&cvv2, "cvv2", "", "credit card CVV2")
+	flagSet.StringVar(&jwt, "jwt", "", "authentication JWT")
+	err := flagSet.Parse(args)
+	if err != nil {
+		log.Fatal("failed to parse update-credit-card flags", err)
+	}
+
+	updateCmd := cli.NewUpdateCreditCardCmd(client)
+	err = updateCmd.Execute(id, number, name, expiryDate, cvv2, jwt)
 	if err != nil {
 		log.Fatal(err)
 	}
