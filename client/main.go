@@ -84,6 +84,25 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println("Success")
+	case "create-credit-card":
+		flagSet := flag.NewFlagSet("create-credit-card", flag.ExitOnError)
+		var number, name, expiryDate, cvv2, jwt string
+		flagSet.StringVar(&number, "number", "", "credit card number")
+		flagSet.StringVar(&name, "name", "", "credit card owner number")
+		flagSet.StringVar(&expiryDate, "date", "", "credit card expriry date in RFC3339 format")
+		flagSet.StringVar(&cvv2, "cvv2", "", "credit card CVV2")
+		flagSet.StringVar(&jwt, "jwt", "", "authentication JWT")
+		err := flagSet.Parse(args)
+		if err != nil {
+			log.Fatal("failed to parse create-credit-card flags", err)
+		}
+
+		createCmd := cli.NewCreateCreditCardCmd(client)
+		err = createCmd.Execute(number, name, expiryDate, cvv2, jwt)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("Success")
 	default:
 		log.Fatal("invalid command")
 	}
