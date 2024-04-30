@@ -266,6 +266,48 @@ func (client *GophkeeperClient) CreateBinData(ctx context.Context, filename stri
 	return nil
 }
 
+func (client *GophkeeperClient) UpdateCredentials(ctx context.Context, id int64, login, password string) error {
+	reqBody := &bytes.Buffer{}
+	writer := multipart.NewWriter(reqBody)
+	if err := createFormField(writer, "secret_type", []byte("credentials")); err != nil {
+		return fmt.Errorf("failed to add secret_type field: %w", err)
+	}
+	if err := createFormField(writer, "login", []byte(login)); err != nil {
+		return fmt.Errorf("failed to add login field: %w", err)
+	}
+	if err := createFormField(writer, "password", []byte(password)); err != nil {
+		return fmt.Errorf("failed to add password filed: %w", err)
+	}
+	if err := writer.Close(); err != nil {
+		return fmt.Errorf("failed to create request form: %w", err)
+	}
+
+	req, err := http.NewRequest(
+		http.MethodPatch,
+		fmt.Sprintf("%s/api/secrets/%d", client.baseURL, id),
+		reqBody,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Add("Content-Type", writer.FormDataContentType())
+	req.AddCookie(&http.Cookie{
+		Name:  "jwt",
+		Value: client.jwt,
+	})
+	resp, err := client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to do request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("failed to update creadentials")
+	}
+
+	return nil
+}
+
 func (client *GophkeeperClient) SetJWT(jwt string) {
 	client.jwt = jwt
 }
