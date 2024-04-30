@@ -6,6 +6,7 @@ import (
 )
 
 type BinData struct {
+	ID       int
 	Filename string
 	Bytes    []byte
 }

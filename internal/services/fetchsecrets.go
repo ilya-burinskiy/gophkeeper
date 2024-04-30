@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
+	"strconv"
 
 	"github.com/ilya-burinskiy/gophkeeper/internal/models"
 )
@@ -98,6 +98,7 @@ func (srv FetchUserSecretsService) writeCredsSecrets(zipWriter *zip.Writer, cred
 		if err != nil {
 			return err
 		}
+		creds[i].ID = credsSecrets[i].ID
 		creds[i].Description = credsSecrets[i].Description
 	}
 
@@ -137,6 +138,7 @@ func (srv FetchUserSecretsService) writeCreditCardsSecrets(
 		if err != nil {
 			return err
 		}
+		creditCards[i].ID = creditCardsSecrets[i].ID
 		creditCards[i].Description = creditCardsSecrets[i].Description
 	}
 
@@ -181,8 +183,10 @@ func (srv FetchUserSecretsService) writeBinDataSecrets(
 		if binData[i].Filename != "" {
 			fname = binData[i].Filename
 		} else {
-			fname = "bin_data_" + fmt.Sprint(i)
+			fname = "bin_data"
 		}
+		fname = fname + "_" + strconv.Itoa(binDataSecrets[i].ID)
+
 		f, err := zipWriter.Create(fname)
 		if err != nil {
 			return err

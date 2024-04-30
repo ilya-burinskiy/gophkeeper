@@ -6,6 +6,7 @@ import (
 )
 
 type Credentials struct {
+	ID          int
 	Description string
 	Login       string
 	Password    string
