@@ -67,6 +67,23 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println("Success")
+	case "create-creds":
+		flagSet := flag.NewFlagSet("create-creds", flag.ExitOnError)
+		var login, password, jwt string
+		flagSet.StringVar(&login, "login", "", "login")
+		flagSet.StringVar(&password, "password", "", "password")
+		flagSet.StringVar(&jwt, "jwt", "", "authentication JWT")
+		err := flagSet.Parse(args)
+		if err != nil {
+			log.Fatal("failed to parse get-secrets flags", err)
+		}
+
+		createCmd := cli.NewCreateCredentialsCmd(client)
+		err = createCmd.Execute(login, password, jwt)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("Success")
 	default:
 		log.Fatal("invalid command")
 	}
