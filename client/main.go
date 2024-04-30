@@ -103,6 +103,20 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println("Success")
+	case "create-bin-data":
+		flagSet := flag.NewFlagSet("create-bin-data", flag.ExitOnError)
+		var filepath, jwt string
+		flagSet.StringVar(&filepath, "path", "", "file path")
+		flagSet.StringVar(&jwt, "jwt", "", "authentication JWT")
+		if err := flagSet.Parse(args); err != nil {
+			log.Fatal("failed to parse create-bin-data flags", err)
+		}
+
+		createCmd := cli.NewCreateBinDataCmd(client)
+		if err := createCmd.Execute(filepath, jwt); err != nil {
+			log.Fatal(err)
+		}
+		log.Println("Success")
 	default:
 		log.Fatal("invalid command")
 	}
