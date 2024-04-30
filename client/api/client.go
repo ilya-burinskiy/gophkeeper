@@ -172,6 +172,55 @@ func (client *GophkeeperClient) CreateCredentials(ctx context.Context, login, pa
 	return nil
 }
 
+func (client *GophkeeperClient) CreateCreditCard(ctx context.Context, number, name, expiryDateStr, cvv2 string) error {
+	reqBody := &bytes.Buffer{}
+	writer := multipart.NewWriter(reqBody)
+	if err := createFormField(writer, "secret_type", []byte("credit_card_info")); err != nil {
+		return fmt.Errorf("failed to add secret_type field: %w", err)
+	}
+	if err := createFormField(writer, "credit_card_number", []byte(number)); err != nil {
+		return fmt.Errorf("failed to add credit_card_number field: %w", err)
+	}
+	if err := createFormField(writer, "credit_card_name", []byte(name)); err != nil {
+		return fmt.Errorf("failed to add credit_card_name field: %w", err)
+	}
+	if err := createFormField(writer, "credit_card_expiry_date", []byte(expiryDateStr)); err != nil {
+		return fmt.Errorf("failed to add credit_card_expirty_date field: %w", err)
+	}
+	if err := createFormField(writer, "credit_card_cvv2", []byte(cvv2)); err != nil {
+		return fmt.Errorf("failed to add credit_card_cvv2 field: %w", err)
+	}
+	if err := writer.Close(); err != nil {
+		return fmt.Errorf("failed to create request form: %w", err)
+	}
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		client.baseURL+"/api/secrets",
+		reqBody,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Add("Content-Type", writer.FormDataContentType())
+	req.AddCookie(&http.Cookie{
+		Name:  "jwt",
+		Value: client.jwt,
+	})
+
+	resp, err := client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to do request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("failed to create credit card")
+	}
+
+	return nil
+}
+
 func (client *GophkeeperClient) SetJWT(jwt string) {
 	client.jwt = jwt
 }
