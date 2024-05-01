@@ -401,6 +401,34 @@ func (client *GophkeeperClient) UpdateBinData(ctx context.Context, id int64, fil
 
 	return nil
 }
+
+func (client *GophkeeperClient) DeleteSecret(ctx context.Context, id int64) error {
+	req, err := http.NewRequest(
+		http.MethodDelete,
+		fmt.Sprintf("%s/api/secrets/%d", client.baseURL, id),
+		nil,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.AddCookie(&http.Cookie{
+		Name:  "jwt",
+		Value: client.jwt,
+	})
+
+	resp, err := client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to do request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("failed to delete secret")
+	}
+
+	return nil
+}
+
 func (client *GophkeeperClient) SetJWT(jwt string) {
 	client.jwt = jwt
 }
