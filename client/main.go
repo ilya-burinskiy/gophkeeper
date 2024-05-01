@@ -35,6 +35,8 @@ func main() {
 		execUpdateCredsCmd(args, client)
 	case "update-credit-card":
 		execUpdateCreditCardCmd(args, client)
+	case "update-bin-data":
+		execUpdateBinDataCmd(args, client)
 	default:
 		log.Fatal("invalid command")
 	}
@@ -189,6 +191,24 @@ func execUpdateCreditCardCmd(args []string, client *api.GophkeeperClient) {
 	updateCmd := cli.NewUpdateCreditCardCmd(client)
 	err = updateCmd.Execute(id, number, name, expiryDate, cvv2, jwt)
 	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Success")
+}
+
+func execUpdateBinDataCmd(args []string, client *api.GophkeeperClient) {
+	flagSet := flag.NewFlagSet("update-bin-data", flag.ExitOnError)
+	var id int64
+	var filepath, jwt string
+	flagSet.Int64Var(&id, "id", 0, "bin data ID")
+	flagSet.StringVar(&filepath, "path", "", "file path")
+	flagSet.StringVar(&jwt, "jwt", "", "authentication JWT")
+	if err := flagSet.Parse(args); err != nil {
+		log.Fatal("failed to parse update-bin-data flags", err)
+	}
+
+	updateCmd := cli.NewUpdateBinDataCmd(client)
+	if err := updateCmd.Execute(id, filepath, jwt); err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Success")
