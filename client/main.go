@@ -37,6 +37,8 @@ func main() {
 		execUpdateCreditCardCmd(args, client)
 	case "update-bin-data":
 		execUpdateBinDataCmd(args, client)
+	case "delete":
+		execDeleteCmd(args, client)
 	default:
 		log.Fatal("invalid command")
 	}
@@ -209,6 +211,23 @@ func execUpdateBinDataCmd(args []string, client *api.GophkeeperClient) {
 
 	updateCmd := cli.NewUpdateBinDataCmd(client)
 	if err := updateCmd.Execute(id, filepath, jwt); err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Success")
+}
+
+func execDeleteCmd(args []string, client *api.GophkeeperClient) {
+	flagSet := flag.NewFlagSet("delete", flag.ExitOnError)
+	var id int64
+	var jwt string
+	flagSet.Int64Var(&id, "id", 0, "secret ID")
+	flagSet.StringVar(&jwt, "jwt", "", "authentication JWT")
+	if err := flagSet.Parse(args); err != nil {
+		log.Fatal("failed to parse delete flags")
+	}
+
+	delCmd := cli.NewDeleteSecretCmd(client)
+	if err := delCmd.Execute(id, jwt); err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Success")
