@@ -11,6 +11,7 @@ const SecretKey = "secret"
 type Config struct {
 	RunAddr       string
 	DSN           string
+	MasterKey     string
 	ServerCRTPath string
 	ServerKeyPath string
 }
@@ -27,6 +28,7 @@ func Parse() Config {
 	if envDSN := os.Getenv("DATABASE_URI"); envDSN != "" {
 		config.DSN = envDSN
 	}
+	config.MasterKey = os.Getenv("MASTER_KEY")
 	config.ServerCRTPath = os.Getenv("SERVER_CRT_PATH")
 	config.ServerKeyPath = os.Getenv("SERVER_KEY_PATH")
 

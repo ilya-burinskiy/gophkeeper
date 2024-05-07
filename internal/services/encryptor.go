@@ -4,12 +4,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"errors"
 )
-
-var masterKey = [32]byte{
-	239, 140, 200, 100, 31, 6, 108, 25, 158, 54, 149, 16, 138, 90, 157, 144,
-	53, 144, 0, 193, 140, 107, 205, 41, 70, 167, 116, 218, 39, 58, 207, 240,
-}
 
 type RandGen interface {
 	Gen(size int) ([]byte, error)
@@ -27,17 +23,23 @@ func (cr CryptoRandGen) Gen(size int) ([]byte, error) {
 }
 
 type DataEncryptor struct {
-	randGen RandGen
+	randGen   RandGen
+	masterKey []byte
 }
 
-func NewDataEncryptor(randGen RandGen) DataEncryptor {
-	return DataEncryptor{
-		randGen: randGen,
+func NewDataEncryptor(randGen RandGen, masterKey []byte) (DataEncryptor, error) {
+	if keyLen := len(masterKey); keyLen == 16 || keyLen == 24 || keyLen == 32 {
+		return DataEncryptor{
+			randGen:   randGen,
+			masterKey: masterKey,
+		}, nil
+	} else {
+		return DataEncryptor{}, errors.New("invalid master key length")
 	}
 }
 
 func (de DataEncryptor) Encrypt(msg []byte) ([]byte, []byte, error) {
-	key, err := de.randGen.Gen(len(masterKey))
+	key, err := de.randGen.Gen(len(de.masterKey))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -45,7 +47,7 @@ func (de DataEncryptor) Encrypt(msg []byte) ([]byte, []byte, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	encodedKey, err := de.encrypt(key, masterKey[:])
+	encodedKey, err := de.encrypt(key, de.masterKey)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -54,7 +56,7 @@ func (de DataEncryptor) Encrypt(msg []byte) ([]byte, []byte, error) {
 }
 
 func (de DataEncryptor) ReEncrypt(msg []byte, encryptedKey []byte) ([]byte, error) {
-	key, err := de.decrypt(encryptedKey, masterKey[:])
+	key, err := de.decrypt(encryptedKey, de.masterKey)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +64,7 @@ func (de DataEncryptor) ReEncrypt(msg []byte, encryptedKey []byte) ([]byte, erro
 }
 
 func (de DataEncryptor) Decrypt(ciphertext []byte, encryptedKey []byte) ([]byte, error) {
-	decryptedKey, err := de.decrypt(encryptedKey, masterKey[:])
+	decryptedKey, err := de.decrypt(encryptedKey, de.masterKey)
 	if err != nil {
 		return nil, err
 	}

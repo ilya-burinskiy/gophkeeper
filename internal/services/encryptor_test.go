@@ -72,7 +72,13 @@ func TestEncryptor(t *testing.T) {
 	}
 
 	rndGen := new(randGenMock)
-	encryptor := services.NewDataEncryptor(rndGen)
+	encryptor, _ := services.NewDataEncryptor(
+		rndGen,
+		[]byte{
+			239, 140, 200, 100, 31, 6, 108, 25, 158, 54, 149, 16, 138, 90, 157, 144,
+			53, 144, 0, 193, 140, 107, 205, 41, 70, 167, 116, 218, 39, 58, 207, 240,
+		},
+	)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, rndGenRes := range tc.rndGenResults {
@@ -121,7 +127,13 @@ func TestDecrypt(t *testing.T) {
 	}
 
 	rndGen := new(randGenMock)
-	encryptor := services.NewDataEncryptor(rndGen)
+	encryptor, _ := services.NewDataEncryptor(
+		rndGen,
+		[]byte{
+			239, 140, 200, 100, 31, 6, 108, 25, 158, 54, 149, 16, 138, 90, 157, 144,
+			53, 144, 0, 193, 140, 107, 205, 41, 70, 167, 116, 218, 39, 58, 207, 240,
+		},
+	)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			msg, err := encryptor.Decrypt(tc.encryptedData, tc.encryptedKey)
@@ -172,7 +184,13 @@ func TestReEncrypt(t *testing.T) {
 	}
 
 	rndGen := new(randGenMock)
-	encryptor := services.NewDataEncryptor(rndGen)
+	encryptor, _ := services.NewDataEncryptor(
+		rndGen,
+		[]byte{
+			239, 140, 200, 100, 31, 6, 108, 25, 158, 54, 149, 16, 138, 90, 157, 144,
+			53, 144, 0, 193, 140, 107, 205, 41, 70, 167, 116, 218, 39, 58, 207, 240,
+		},
+	)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rndGen.On("Gen", mock.Anything).

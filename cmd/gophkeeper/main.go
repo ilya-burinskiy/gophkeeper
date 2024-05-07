@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/hex"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -29,7 +30,17 @@ func main() {
 
 	registerSrv := services.NewRegisterService(store)
 	authSrv := services.NewAuthenticateService(store)
-	encryptor := services.NewDataEncryptor(services.CryptoRandGen{})
+	masterKey, err := hex.DecodeString(config.MasterKey)
+	if err != nil {
+		panic(err)
+	}
+	encryptor, err := services.NewDataEncryptor(
+		services.CryptoRandGen{},
+		masterKey,
+	)
+	if err != nil {
+		panic(err)
+	}
 	createSecretSrv := services.NewCreateSecretService(store, encryptor)
 	findSrv := services.NewFindSecretService(store)
 	updateSrv := services.NewUpdateSecretService(store, encryptor)

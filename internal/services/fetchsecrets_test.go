@@ -130,7 +130,13 @@ func TestFetchSecrets(t *testing.T) {
 	}
 
 	fetcher := new(secretFetcherMock)
-	decryptor := services.NewDataEncryptor(services.CryptoRandGen{})
+	decryptor, _ := services.NewDataEncryptor(
+		services.CryptoRandGen{},
+		[]byte{
+			239, 140, 200, 100, 31, 6, 108, 25, 158, 54, 149, 16, 138, 90, 157, 144,
+			53, 144, 0, 193, 140, 107, 205, 41, 70, 167, 116, 218, 39, 58, 207, 240,
+		},
+	)
 	fetchSrv := services.NewFetchUserSecretsService(fetcher, decryptor)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
