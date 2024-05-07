@@ -121,7 +121,7 @@ func execCreateCreditCardCmd(args []string, client *api.GophkeeperClient) {
 	flagSet := flag.NewFlagSet("create-credit-card", flag.ExitOnError)
 	var number, name, expiryDate, cvv2, jwt string
 	flagSet.StringVar(&number, "number", "", "credit card number")
-	flagSet.StringVar(&name, "name", "", "credit card owner number")
+	flagSet.StringVar(&name, "name", "", "credit card owner name")
 	flagSet.StringVar(&expiryDate, "date", "", "credit card expriry date in RFC3339 format")
 	flagSet.StringVar(&cvv2, "cvv2", "", "credit card CVV2")
 	flagSet.StringVar(&jwt, "jwt", "", "authentication JWT")
@@ -181,7 +181,7 @@ func execUpdateCreditCardCmd(args []string, client *api.GophkeeperClient) {
 	var number, name, expiryDate, cvv2, jwt string
 	flagSet.Int64Var(&id, "id", 0, "credit card ID")
 	flagSet.StringVar(&number, "number", "", "credit card number")
-	flagSet.StringVar(&name, "name", "", "credit card owner number")
+	flagSet.StringVar(&name, "name", "", "credit card owner name")
 	flagSet.StringVar(&expiryDate, "date", "", "credit card expriry date in RFC3339 format")
 	flagSet.StringVar(&cvv2, "cvv2", "", "credit card CVV2")
 	flagSet.StringVar(&jwt, "jwt", "", "authentication JWT")
